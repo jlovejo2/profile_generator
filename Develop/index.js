@@ -1,6 +1,11 @@
 const fs = require("fs");
 const axios = require("axios");
 const inquirer = require("inquirer");
+const convertToPdf = require("electron-html-to");
+const conversion = convertToPdf({
+    converterPath: convertToPdf.converters.PDF
+});
+
 const questions = [
 ];
 
@@ -56,15 +61,26 @@ inquirer
             console.log(resp.data.followers);
             console.log(resp.data.following);
 
-            fs.appendFile("index.html", generateHTML(resp, color),
-            function(err) {
-                if (err) {
-                    return console.log(err)
-                } 
-                console.log("success!")
-            });
+            conversion({ html: generateHTML(resp, color)}, function (err, result){
+                if (err){
+                    return console.error(err);
+                }
+
+                console.log(result.numberOfPages);
+                result.stream.pipe(fs.createWriteStream('output.pdf'));
+                // conversion.kill();
+            })
+            // fs.appendFile("index.html", generateHTML(resp, color),
+            // function(err) {
+            //     if (err) {
+            //         return console.log(err)
+            //     } 
+            //     console.log("success!")
+            // });
         });
     });
+
+    
 
 
 function writeToFile(fileName, data) {
@@ -339,3 +355,5 @@ function generateHTML(object, color) {
     </html>`
 
 }
+
+
