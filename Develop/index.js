@@ -10,7 +10,8 @@ const conversion = convertToPdf({
   allowLocalFilesAccess: true
 });
 
-
+//This is the colors object that provides the possible color choices for the user and based on that choice
+//delivers different colors to the proper CSS location in generateHTML
 const colors = {
   green: {
     wrapperBackground: "#E6E1C3",
@@ -38,7 +39,10 @@ const colors = {
   }
 };
 
+//This line calls the inquire npm
 inquirer
+  //This line of finds the prompt method in the inquirer npm and then establishes the questions to be prompted.
+  //The users answers to the prompts are stored in the name key under the specified value.
   .prompt([
     {
       message: "What color would you like? (Options: " + Object.keys(colors) + ")",
@@ -57,29 +61,35 @@ inquirer
 
   ]).then(function (resp) {
 
+    //This code taking the user responses to the first two prompts and setting them to let variables
     let color = resp.color;
     let username = resp.username;
+  
     let linkedIn = " ";
 
-    console.log(linkedIn);
-
+    //This if statement is checking for if they do not enter a url.  If so the linkedIn url is set to "#".
     if (resp.public_url == "" ) {
 
       linkedIn = "#";
-      
+    //This line of code is checking the users link for a http:// or https://
+    //If so the linkedIn variable is set equal to it.
     } else if (resp.public_url.includes("http://") || resp.public_url.includes("https://")) {
       linkedIn = resp.public_url;
-    } 
+
+    }
+    //This code is assuming if http:// or https:// is not found then the user submitted a valid link just doesn't have the http:// in front.
+    //So it adds it for the user.
     else {
       linkedIn = "https://" + resp.public_url;
     }
 
+    //This uses the users enter github username to create a queryURL for axios
     const queryUrl = `https://api.github.com/users/${username}`;
 
+    //This line of code performs the axios query to github and delivers the resp object
     axios.get(queryUrl).then(function (resp) {
-
-      // console.log(resp);
-     
+      
+      //This line of code
       conversion({ html: generateHTML(resp, color, linkedIn) }, function (err, result) {
 
         //this variable is to be passed into createWriteStream method to change it from default of write to append
@@ -89,12 +99,11 @@ inquirer
           return console.error(err);
         }
 
-        console.log(result.numberOfPages);
-        console.log("Success! PDF created.")
-        // console.log(result);
-
+        //line of code is set-up to navigate through npm electron-html-to properly and deliver proper parameters to pipe() method
         result.stream.pipe(fs.createWriteStream('profile_' + resp.data.login + '.pdf'), optionsOne);
+        //this code is necessary to ensure that an endless loop is not formed
         conversion.kill();
+        console.log("Success! PDF created.")
       })
 
     });
