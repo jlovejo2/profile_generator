@@ -19,8 +19,14 @@ https://jlovejo2.github.io/profile_generator/
 * Make sure you are in the develop folder when running the code on the command line.
 
 ## The Generated Profile:
-* The Generated profile comes with four different color schemes so far.  See the below images for examples. 
+* The Generated profile comes with four different color schemes so far.  See the below images for examples.
+
+Red Profile
+
 ![alt text](Assets/images/red_profile.jpg "Red layout") 
+
+Green Profile
+
 ![alt text](Assets/images/green_profile.jpg "Green layout")
 
 ## How To Use
