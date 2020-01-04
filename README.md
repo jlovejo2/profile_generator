@@ -20,8 +20,8 @@ https://jlovejo2.github.io/profile_generator/
 
 ## The Generated Profile:
 * The Generated profile comes with four different color schemes so far.  See the below images for examples. 
-![alt text](assets/images/red_profile.jpg "Red layout") 
-![alt text](assets/images/green_profile.jpg "Green layout")
+![alt text](Assets/images/red_profile.jpg "Red layout") 
+![alt text](Assets/images/green_profile.jpg "Green layout")
 
 ## How To Use
 * The user goes into the develop folder and runs the code by entering "node index.js"
