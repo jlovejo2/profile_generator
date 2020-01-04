@@ -1,105 +1,112 @@
+//These are the variables that were created inorder to run the proper npm packagages used in the below code
 const fs = require("fs");
 const axios = require("axios");
 const inquirer = require("inquirer");
 const convertToPdf = require("electron-html-to");
+
+//This is a variable created in regards to the electron-html-to npm package.
 const conversion = convertToPdf({
-    converterPath: convertToPdf.converters.PDF
+  converterPath: convertToPdf.converters.PDF,
+  allowLocalFilesAccess: true
 });
 
-const questions = [
-];
 
 const colors = {
-    green: {
-        wrapperBackground: "#E6E1C3",
-        headerBackground: "#C1C72C",
-        headerColor: "black",
-        photoBorderColor: "#black"
-    },
-    blue: {
-        wrapperBackground: "#5F64D3",
-        headerBackground: "#26175A",
-        headerColor: "white",
-        photoBorderColor: "#73448C"
-    },
-    pink: {
-        wrapperBackground: "#879CDF",
-        headerBackground: "#FF8374",
-        headerColor: "white",
-        photoBorderColor: "#FEE24C"
-    },
-    red: {
-        wrapperBackground: "#DE9967",
-        headerBackground: "#870603",
-        headerColor: "white",
-        photoBorderColor: "white"
-    }
+  green: {
+    wrapperBackground: "#E6E1C3",
+    headerBackground: "#C1C72C",
+    headerColor: "black",
+    photoBorderColor: "#black"
+  },
+  blue: {
+    wrapperBackground: "#5F64D3",
+    headerBackground: "#26175A",
+    headerColor: "white",
+    photoBorderColor: "#73448C"
+  },
+  pink: {
+    wrapperBackground: "#879CDF",
+    headerBackground: "#FF8374",
+    headerColor: "white",
+    photoBorderColor: "#FEE24C"
+  },
+  red: {
+    wrapperBackground: "#DE9967",
+    headerBackground: "#870603",
+    headerColor: "white",
+    photoBorderColor: "white"
+  }
 };
-
-init();
 
 inquirer
-    .prompt([
-        {
-            message: "What is your favorite color?",
-            name: "color"
-        },
+  .prompt([
+    {
+      message: "What color would you like? (Options: " + Object.keys(colors) + ")",
+      name: "color"
+    },
 
-        {
-            message: "What is you github username?",
-            name: "username"
+    {
+      message: "What is you github username?",
+      name: "username"
+    },
+
+    {
+      message: "What is you linkedIn public URL? (Optional)",
+      name: "public_url"
+    }
+
+  ]).then(function (resp) {
+
+    let color = resp.color;
+    let username = resp.username;
+    let linkedIn = " ";
+
+    console.log(linkedIn);
+
+    if (resp.public_url == "" ) {
+
+      linkedIn = "#";
+      
+    } else if (resp.public_url.includes("http://") || resp.public_url.includes("https://")) {
+      linkedIn = resp.public_url;
+    } 
+    else {
+      linkedIn = "https://" + resp.public_url;
+    }
+
+    const queryUrl = `https://api.github.com/users/${username}`;
+
+    axios.get(queryUrl).then(function (resp) {
+
+      // console.log(resp);
+     
+      conversion({ html: generateHTML(resp, color, linkedIn) }, function (err, result) {
+
+        //this variable is to be passed into createWriteStream method to change it from default of write to append
+        let optionsOne = { flags: 'a' };
+
+        if (err) {
+          return console.error(err);
         }
 
-    ]).then(function (resp) {
+        console.log(result.numberOfPages);
+        console.log("Success! PDF created.")
+        // console.log(result);
 
-        let color = resp.color;
-        let username = resp.username;
-        const queryUrl = `https://api.github.com/users/${username}`;
+        result.stream.pipe(fs.createWriteStream('profile_' + resp.data.login + '.pdf'), optionsOne);
+        conversion.kill();
+      })
 
-        axios.get(queryUrl).then(function (resp) {
-            console.log(resp.data.public_repos);
-            console.log(resp.data.followers);
-            console.log(resp.data.following);
-
-            conversion({ html: generateHTML(resp, color)}, function (err, result){
-                if (err){
-                    return console.error(err);
-                }
-
-                console.log(result.numberOfPages);
-                result.stream.pipe(fs.createWriteStream('output.pdf'));
-                // conversion.kill();
-            })
-            // fs.appendFile("index.html", generateHTML(resp, color),
-            // function(err) {
-            //     if (err) {
-            //         return console.log(err)
-            //     } 
-            //     console.log("success!")
-            // });
-        });
     });
+  });
 
-    
-
-
-function writeToFile(fileName, data) {
-
-}
-
+//This function was set-up as an initliazation function however it was not used in the creation of this product.
 function init() {
-    
-
 };
 
-//to get number of public repos use resp.data.public_repos
-//to get number of followers use resp.data.followers
-//to get number of users following resp.data.following
-//to get number of github stars resp.data
-//to get image of resp.data.avatar_url
-
-function generateHTML(object, color) {
-    return `<!DOCTYPE html>
+//This function takes three input parameters.  
+function generateHTML(object, userColor, linkedIn_url) {
+  return `<!DOCTYPE html>
     <html lang="en">
     
     <head>
@@ -134,8 +141,7 @@ function generateHTML(object, color) {
         }
     
         .wrapper {
-          background-color: #879CDF;
-          /* ${colors[color].wrapperBackground}; */
+          background-color: ${colors[userColor].wrapperBackground};
           padding-top: 100px;
         }
     
@@ -193,10 +199,8 @@ function generateHTML(object, color) {
           display: flex;
           justify-content: center;
           flex-wrap: wrap;
-          background-color: #FF8374;
-          /* ${colors[color].headerBackground}; */
-          color: white;
-          /* ${colors[color].headerColor}; */
+          background-color: ${colors[userColor].headerBackground};
+          color: ${colors[userColor].headerColor};
           padding: 10px;
           width: 95%;
           border-radius: 6px;
@@ -208,8 +212,7 @@ function generateHTML(object, color) {
           border-radius: 50%;
           object-fit: cover;
           margin-top: -75px;
-          border: 6px solid #FEE24C;
-          /* ${colors[color].photoBorderColor}; */
+          border: 6px solid ${colors[userColor].photoBorderColor};
           box-shadow: rgba(0, 0, 0, 0.3) 4px 1px 20px 4px;
         }
     
@@ -260,8 +263,8 @@ function generateHTML(object, color) {
         .card {
           padding: 20px;
           border-radius: 6px;
-          background-color: ${colors[color].headerBackground};
-          color: ${colors[color].headerColor};
+          background-color: ${colors[userColor].headerBackground};
+          color: ${colors[userColor].headerColor};
           margin: 20px;
         }
     
@@ -298,9 +301,9 @@ function generateHTML(object, color) {
           <!-- </div> -->
           <h6 class="">Currently at ${object.data.company}</h6>
           <p class="links-nav lead">
-            <a href="#" role="button"><i class="nav-link fas fa-location-arrow"></i>Location</a>
-            <a href=${object.data.url} role="button"><i class="nav-link fab fa-github"></i>Github</a>
-            <a href="#" role="button"><i class="nav-link fab fa-linkedin"></i>Linkedin</a>
+            <a href="https:maps.google.com/?q=${object.data.location}" role="button"><i class="nav-link fas fa-location-arrow"></i>Location</a>
+            <a href=${object.data.html_url} role="button"><i class="nav-link fab fa-github"></i>Github</a>
+            <a href="${linkedIn_url}" role="button"><i class="nav-link fab fa-linkedin"></i>Linkedin</a>
           </p>
         </div>
         <!-- </div> -->
@@ -310,7 +313,7 @@ function generateHTML(object, color) {
           <div class="container">
             <div class="row">
               <div class="col-lg-12 col-md-12 col-sm-12">
-                <h4>I build things and teach people to code</h2>
+                <h4>${object.data.bio}</h4>
               </div>
               <div class="col col-lg-5 col-md-5 col-sm-6 col-xs-6">
                 <div class="card" style="width: 18rem;">
@@ -333,8 +336,8 @@ function generateHTML(object, color) {
               <div class="col col-lg-5 col-md-5 col-sm-6 col-xs-6">
                 <div class="card" style="width: 18rem;">
                   <div class="card-body">
-                    <h5 class="card-title">GitHub Stars</h5>
-                    <p class="card-text">???????????</p>
+                    <h5 class="card-title">Public Gists</h5>
+                    <p class="card-text">${object.data.public_gists}</p>
                   </div>
                 </div>
               </div>
